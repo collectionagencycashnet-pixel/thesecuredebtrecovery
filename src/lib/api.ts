@@ -19,11 +19,28 @@ export async function fetchApplications(): Promise<LoanApplication[]> {
 
 export async function createApplication(app: LoanApplication): Promise<void> {
   if (!isSupabaseConfigured || !supabase) return;
+
   const { error } = await supabase.from(TABLE_NAME).insert([app]);
-  if (error) {
-    console.error('Error creating application:', error);
-    throw new Error(error.message || JSON.stringify(error));
+  if (!error) return;
+
+  const missingColumnError = String(error.message || '').includes("Could not find the 'bankName' column") ||
+    String(error.message || '').includes('column "bankName" of relation "loan_applications" does not exist');
+
+  if (missingColumnError) {
+    console.warn('Supabase schema is missing bankName. Retrying insert without bankName field.');
+    const fallbackApp = { ...app } as Record<string, any>;
+    delete fallbackApp.bankName;
+
+    const retry = await supabase.from(TABLE_NAME).insert([fallbackApp]);
+    if (retry.error) {
+      console.error('Retry failed after removing bankName:', retry.error);
+      throw new Error(retry.error.message || JSON.stringify(retry.error));
+    }
+    return;
   }
+
+  console.error('Error creating application:', error);
+  throw new Error(error.message || JSON.stringify(error));
 }
 
 export async function updateApplicationStatus(id: string, status: LoanStatus): Promise<void> {

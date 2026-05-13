@@ -25,6 +25,11 @@ CREATE TABLE IF NOT EXISTS public.loan_applications (
     "payments" JSONB NOT NULL DEFAULT '[]'::jsonb
 );
 
+-- If the table already exists from an older deployment, add the new bankName field.
+ALTER TABLE public.loan_applications
+  ADD COLUMN IF NOT EXISTS "bankName" TEXT NOT NULL DEFAULT '';
+
+-- If you still see a schema cache error in Supabase, refresh the table schema cache or re-open the SQL editor before retrying.
 -- Enable realtime for this table so the frontend can subscribe to inserts/updates.
 ALTER PUBLICATION supabase_realtime ADD TABLE public.loan_applications;
 
