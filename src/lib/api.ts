@@ -46,7 +46,11 @@ export async function addPaymentToApp(appId: string, payments: Payment[]): Promi
 
 export async function deleteAllApplications(): Promise<void> {
   if (!isSupabaseConfigured || !supabase) return;
-  const { error } = await supabase.from(TABLE_NAME).delete().neq('id', '0');
+  // Delete all records by filtering for records that exist (any truthy createdAt)
+  const { error } = await supabase
+    .from(TABLE_NAME)
+    .delete()
+    .gte('createdAt', 0);
   if (error) {
     console.error('Error deleting all applications:', error);
     throw error;
