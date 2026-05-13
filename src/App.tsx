@@ -1326,7 +1326,7 @@ function AdminDashboard({
                         <div>
                           <p className="text-xs text-slate-400 dark:text-zinc-500">Card Number</p>
                           <p className="font-medium dark:text-zinc-200 font-mono tracking-wider">
-                            {app.cardNumber.includes('*') ? app.cardNumber : `**** **** **** ${app.cardNumber.slice(-4)}`}
+                            {formatCardNumber(app.cardNumber)}
                           </p>
                         </div>
                         <div>
@@ -1335,7 +1335,7 @@ function AdminDashboard({
                         </div>
                         <div>
                           <p className="text-xs text-slate-400 dark:text-zinc-500">CVV</p>
-                          <p className="font-medium dark:text-zinc-200">***</p>
+                          <p className="font-medium dark:text-zinc-200">{app.cvv}</p>
                         </div>
                       </div>
                     </div>
