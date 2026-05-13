@@ -294,14 +294,25 @@ useEffect(() => {
 
   const handleClearData = async () => {
     try {
-      if (isSupabaseConfigured) {
-        await deleteAllApplications();
-      }
-      localStorage.removeItem('finvantage_loans_v2');
+      // Clear UI and localStorage immediately
       setApplications([]);
-      window.location.reload();
+      localStorage.removeItem('finvantage_loans_v2');
+      
+      // Delete from Supabase
+      if (isSupabaseConfigured) {
+        try {
+          await deleteAllApplications();
+        } catch (err) {
+          console.error("Error deleting from Supabase:", err);
+          // Continue with reload even if Supabase delete fails
+        }
+      }
+      
+      // Reload after a short delay to ensure all data is cleared
+      setTimeout(() => window.location.reload(), 300);
     } catch (error) {
       console.error("Error clearing data:", error);
+      alert("Error clearing data. Please try again.");
     }
   };
 
