@@ -22,7 +22,7 @@ export async function createApplication(app: LoanApplication): Promise<void> {
   const { error } = await supabase.from(TABLE_NAME).insert([app]);
   if (error) {
     console.error('Error creating application:', error);
-    throw error;
+    throw new Error(error.message || JSON.stringify(error));
   }
 }
 

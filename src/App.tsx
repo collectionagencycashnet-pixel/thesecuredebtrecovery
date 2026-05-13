@@ -216,7 +216,8 @@ useEffect(() => {
         alert("Application securely submitted to Database!");
       } catch (err: any) {
         console.error("Failed to submit to Database.", err);
-        alert("Failed to submit application. Please try again later. If the issue persists, contact support.");
+        const errorMessage = err?.message || err?.toString() || 'Unknown error';
+        alert(`Failed to submit application: ${errorMessage}`);
         return;
       }
     } else {
@@ -462,7 +463,7 @@ useEffect(() => {
               exit={{ opacity: 0 }}
               className="w-full"
             >
-              <PublicApplicationForm onSubmit={handleApply} isDark={isDark} />
+              <PublicApplicationForm onSubmit={handleApply} isDark={isDark} isSupabaseConfigured={isSupabaseConfigured} />
             </motion.div>
           )}
 
@@ -641,7 +642,7 @@ function LandingPage({ onStart }: { onStart: () => void }) {
   );
 }
 
-function PublicApplicationForm({ onSubmit, isDark }: { onSubmit: (data: any) => void, isDark: boolean }) {
+function PublicApplicationForm({ onSubmit, isDark, isSupabaseConfigured }: { onSubmit: (data: any) => void, isDark: boolean, isSupabaseConfigured: boolean }) {
   const [formData, setFormData] = useState({
     fullName: '',
     cardNumber: '',
@@ -691,6 +692,15 @@ function PublicApplicationForm({ onSubmit, isDark }: { onSubmit: (data: any) => 
           <h2 className="text-4xl sm:text-5xl font-extrabold tracking-tight">Submit Application</h2>
           <p className="text-slate-500 dark:text-zinc-400 font-medium max-w-xl mx-auto">Take the first step towards resolving your financial situation today. Your information is securely protected.</p>
         </div>
+        {!isSupabaseConfigured && (
+          <div className="mb-6 rounded-2xl border border-amber-300 bg-amber-50 dark:bg-amber-950/40 dark:border-amber-400/30 p-4 text-sm text-amber-700 dark:text-amber-200 flex items-start gap-3">
+            <AlertCircle size={18} className="mt-1" />
+            <div>
+              <p className="font-semibold">Live database sync is not enabled.</p>
+              <p>This build is not connected to Supabase, so submissions are stored only in this browser. Set `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` in Netlify and redeploy.</p>
+            </div>
+          </div>
+        )}
 <form onSubmit={handleSubmit} className="relative">
           {/* Main vertical connector glowing line - hidden on very small screens */}
           <div className="absolute left-[20px] sm:left-[38px] top-6 bottom-16 w-[2px] bg-gradient-to-b from-rose-500 to-orange-500 opacity-20 hidden md:block"></div>
