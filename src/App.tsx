@@ -237,12 +237,20 @@ useEffect(() => {
   };
 
   const updateStatus = async (id: string, status: LoanStatus) => {
-    if (isSupabaseConfigured) {
-      await updateApplicationStatus(id, status);
-    }
     setApplications(prev => prev.map(app => 
       app.id === id ? { ...app, status } : app
     ));
+
+    if (isSupabaseConfigured) {
+      try {
+        await updateApplicationStatus(id, status);
+        const refreshed = await fetchApplications();
+        setApplications(refreshed);
+      } catch (err) {
+        console.error('Failed to update status:', err);
+        alert('Failed to save status change. Please refresh and try again.');
+      }
+    }
   };
 
   const addPayment = async (appId: string, amount: number) => {
