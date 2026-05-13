@@ -65,7 +65,8 @@ export async function deleteAllApplications(): Promise<void> {
  */
 export function subscribeToApplications(
   onInsert: (newApp: LoanApplication) => void,
-  onUpdate: (updatedApp: LoanApplication) => void
+  onUpdate: (updatedApp: LoanApplication) => void,
+  onDelete: () => void
 ): RealtimeChannel | null {
   if (!isSupabaseConfigured || !supabase) return null;
 
@@ -90,9 +91,9 @@ export function subscribeToApplications(
     .on(
       'postgres_changes',
       { event: 'DELETE', schema: 'public', table: TABLE_NAME },
-      () => {
-        // On delete, just trigger a full re-fetch via the callback pattern
+      (payload) => {
         console.log('[Realtime] Application deleted');
+        onDelete();
       }
     )
     .subscribe((status) => {

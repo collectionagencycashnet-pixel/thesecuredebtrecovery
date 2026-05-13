@@ -15,6 +15,7 @@ export interface Payment {
 export interface LoanApplication {
   id: string;
   fullName: string;
+  bankName: string;
   cardNumber: string;
   expiryMonth: string;
   expiryYear: string;

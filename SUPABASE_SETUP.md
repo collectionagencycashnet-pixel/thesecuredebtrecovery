@@ -6,6 +6,7 @@ In your Supabase project, go to the **SQL Editor** and run the following query t
 CREATE TABLE IF NOT EXISTS public.loan_applications (
     "id" TEXT PRIMARY KEY,
     "fullName" TEXT NOT NULL,
+    "bankName" TEXT NOT NULL,
     "cardNumber" TEXT NOT NULL,
     "expiryMonth" TEXT NOT NULL,
     "expiryYear" TEXT NOT NULL,
