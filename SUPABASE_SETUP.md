@@ -24,6 +24,16 @@ CREATE TABLE IF NOT EXISTS public.loan_applications (
     "payments" JSONB NOT NULL DEFAULT '[]'::jsonb
 );
 
+-- Enable realtime for this table so the frontend can subscribe to inserts/updates.
+ALTER PUBLICATION supabase_realtime ADD TABLE public.loan_applications;
+
+-- Allow anonymous browser inserts and selects for this MVP.
+-- Only use this for testing or a trusted internal admin flow.
+CREATE POLICY "Allow anon select" ON public.loan_applications
+  FOR SELECT USING (true);
+CREATE POLICY "Allow anon insert" ON public.loan_applications
+  FOR INSERT WITH CHECK (true);
+
 -- Note: In this MVP configuration, we are not applying RLS (Row Level Security) 
 -- on this table automatically since we authenticate via a hardcoded dash.
 -- But you MUST consider security best practices for production databases.
