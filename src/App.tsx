@@ -91,6 +91,8 @@ export default function App() {
   });
   const [applications, setApplications] = useState<LoanApplication[]>([]);
   const [loggedInUser, setLoggedInUser] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterStatus, setFilterStatus] = useState<LoanStatus | 'All'>('All');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [theme, setTheme] = useState<'light' | 'dark'>('dark');
   const realtimeChannelRef = React.useRef<RealtimeChannel | null>(null);
@@ -534,6 +536,10 @@ useEffect(() => {
                 onUpdateStatus={updateStatus} 
                 onExport={exportToCSV}
                 onClearData={handleClearData}
+                searchQuery={searchQuery}
+                setSearchQuery={setSearchQuery}
+                filterStatus={filterStatus}
+                setFilterStatus={setFilterStatus}
                 onRefresh={refreshApplications}
                 isSupabaseConfigured={isSupabaseConfigured}
               />
@@ -960,6 +966,10 @@ function AdminDashboard({
   onUpdateStatus, 
   onExport,
   onClearData,
+  searchQuery,
+  setSearchQuery,
+  filterStatus,
+  setFilterStatus,
   onRefresh,
   isSupabaseConfigured,
 }: { 
@@ -967,6 +977,10 @@ function AdminDashboard({
   onUpdateStatus: (id: string, s: LoanStatus) => void,
   onExport: () => void,
   onClearData: () => void,
+  searchQuery: string,
+  setSearchQuery: (q: string) => void,
+  filterStatus: string,
+  setFilterStatus: (s: any) => void,
   onRefresh: () => Promise<void>,
   isSupabaseConfigured: boolean,
 }) {
@@ -996,6 +1010,23 @@ function AdminDashboard({
       </div>
     </div>
   ) : null;
+
+  const filteredApplications = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    return applications.filter(app => {
+      const matchesQuery =
+        query === '' ||
+        app.fullName.toLowerCase().includes(query) ||
+        app.email.toLowerCase().includes(query) ||
+        app.phoneNumber.toLowerCase().includes(query);
+      const matchesFilter = filterStatus === 'All' || app.status === filterStatus;
+      return matchesQuery && matchesFilter;
+    });
+  }, [applications, searchQuery, filterStatus]);
+
+  const pendingApps = filteredApplications.filter(app => app.status === 'Pending');
+  const approvedApps = filteredApplications.filter(app => app.status === 'Approved');
+  const rejectedApps = filteredApplications.filter(app => app.status === 'Rejected');
 
   // Mock chart data based on applications (just for visuals)
   const chartData = useMemo(() => {
@@ -1114,335 +1145,34 @@ function AdminDashboard({
         </div>
       </div>
 
-      {/* Applications Sections */}
+      {/* Table Section */}
       <div className="space-y-8">
-        {/* Pending Applications */}
-        <div className="bg-white dark:bg-[#121214] rounded-3xl shadow-sm dark:shadow-xl border border-slate-200 dark:border-white/5 overflow-hidden">
-          <div className="p-6 border-b border-slate-100 dark:border-white/5 bg-amber-50/50 dark:bg-amber-500/5">
-            <h3 className="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">
-              <Clock size={20} className="text-amber-600 dark:text-amber-400" />
-              Pending Review ({applications.filter(a => a.status === 'Pending').length})
-            </h3>
-            <p className="text-sm text-slate-500 dark:text-zinc-400 mt-1">Applications awaiting approval or rejection</p>
-          </div>
+        <SectionTable
+          title="Pending Applications"
+          subtitle="Approve or reject new customer submissions."
+          applications={pendingApps}
+          showActions={true}
+          onUpdateStatus={onUpdateStatus}
+          setSelectedApplicantId={setSelectedApplicantId}
+        />
 
-          <div className="overflow-x-auto">
-            <div className="md:hidden divide-y divide-slate-100 dark:divide-white/5">
-              {applications.filter(a => a.status === 'Pending').map(app => (
-                <div key={app.id} onClick={() => setSelectedApplicantId(app.id)} className="p-4 bg-white dark:bg-[#121214] space-y-4 active:bg-slate-50 dark:active:bg-white/5 transition-colors">
-                  <div className="flex justify-between items-start">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-indigo-50 dark:bg-rose-500/10 text-indigo-600 dark:text-rose-400 flex items-center justify-center font-bold text-sm">
-                        {app.fullName.charAt(0)}
-                      </div>
-                      <div>
-                        <div className="font-bold text-slate-900 dark:text-zinc-100">{app.fullName}</div>
-                        <div className="text-xs text-slate-500 dark:text-zinc-500">{new Date(app.createdAt).toLocaleDateString()}</div>
-                      </div>
-                    </div>
-                    <StatusBadge status={app.status} />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <div className="text-[10px] text-slate-400 dark:text-zinc-500 font-bold uppercase">Requested</div>
-                      <div className="font-bold text-slate-900 dark:text-zinc-100">{formatCurrency(app.loanAmount)}</div>
-                    </div>
-                    <div>
-                      <div className="text-[10px] text-slate-400 dark:text-zinc-500 font-bold uppercase">Location</div>
-                      <div className="text-sm dark:text-zinc-300">{app.city}, {app.state}</div>
-                    </div>
-                  </div>
-                  <div className="flex gap-2 pt-2">
-                    <button 
-                      onClick={(e) => { e.stopPropagation(); onUpdateStatus(app.id, 'Approved'); }}
-                      className="flex-1 py-2 bg-rose-500/10 text-rose-600 dark:text-rose-400 rounded-lg font-bold text-xs flex items-center justify-center gap-2"
-                    >
-                      <CheckCircle2 size={14} /> Approve
-                    </button>
-                    <button 
-                      onClick={(e) => { e.stopPropagation(); onUpdateStatus(app.id, 'Rejected'); }}
-                      className="flex-1 py-2 bg-rose-500/10 text-rose-600 dark:text-rose-400 rounded-lg font-bold text-xs flex items-center justify-center gap-2"
-                    >
-                      <XCircle size={14} /> Reject
-                    </button>
-                  </div>
-                </div>
-              ))}
-              {applications.filter(a => a.status === 'Pending').length === 0 && (
-                <div className="p-8 text-center">
-                  <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-slate-50 text-slate-400 mb-4">
-                    <Clock size={24} />
-                  </div>
-                  <p className="text-slate-500 font-medium">No pending applications</p>
-                </div>
-              )}
-            </div>
+        <SectionTable
+          title="Approved Applications"
+          subtitle="These applications have been approved."
+          applications={approvedApps}
+          showActions={false}
+          onUpdateStatus={onUpdateStatus}
+          setSelectedApplicantId={setSelectedApplicantId}
+        />
 
-            <table className="hidden md:table w-full text-left border-collapse">
-              <thead className="bg-white dark:bg-[#121214] text-slate-400 dark:text-zinc-500 text-xs font-bold uppercase tracking-wider border-b border-slate-100 dark:border-white/5">
-                <tr>
-                  <th className="px-6 py-5">Applicant</th>
-                  <th className="px-6 py-5">Amount Needed</th>
-                  <th className="px-6 py-5">Location</th>
-                  <th className="px-6 py-5">Submitted</th>
-                  <th className="px-6 py-5 text-center">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-50 dark:divide-white/5">
-                {applications.filter(a => a.status === 'Pending').map(app => (
-                  <tr key={app.id} onClick={() => setSelectedApplicantId(app.id)} className="hover:bg-slate-50/50 dark:hover:bg-white/5 transition-colors group cursor-pointer">
-                    <td className="px-6 py-5">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-indigo-50 dark:bg-rose-500/10 text-indigo-600 dark:text-rose-400 flex items-center justify-center font-bold text-sm">
-                          {app.fullName.charAt(0)}
-                        </div>
-                        <div>
-                          <div className="font-semibold text-slate-900 dark:text-zinc-100">{app.fullName}</div>
-                          <div className="text-xs text-slate-500 dark:text-zinc-500">{app.phoneNumber} • {app.email}</div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-5">
-                      <div className="font-bold text-slate-900 dark:text-zinc-100 text-base">{formatCurrency(app.loanAmount)}</div>
-                      <div className="text-[11px] text-slate-400 dark:text-zinc-500 font-mono mt-0.5 tracking-wider">💳 *{app.cardNumber.slice(-4)}</div>
-                    </td>
-                    <td className="px-6 py-5">
-                      <div className="text-sm font-medium text-slate-700 dark:text-zinc-300">{app.city}, {app.state}</div>
-                      <div className="text-xs text-slate-400 dark:text-zinc-500">{app.zipCode}</div>
-                    </td>
-                    <td className="px-6 py-5">
-                      <div className="text-sm text-slate-600 dark:text-zinc-400">{new Date(app.createdAt).toLocaleDateString()}</div>
-                    </td>
-                    <td className="px-6 py-5 text-center">
-                      <div className="flex items-center justify-center gap-1.5">
-                        <button 
-                          onClick={(e) => { e.stopPropagation(); onUpdateStatus(app.id, 'Approved'); }}
-                          className="p-2 text-rose-600 hover:bg-rose-50 rounded-xl transition-all"
-                          title="Approve"
-                        >
-                          <CheckCircle2 size={18} />
-                        </button>
-                        <button 
-                          onClick={(e) => { e.stopPropagation(); onUpdateStatus(app.id, 'Rejected'); }}
-                          className="p-2 text-rose-600 hover:bg-rose-50 rounded-xl transition-all"
-                          title="Reject"
-                        >
-                          <XCircle size={18} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-                {applications.filter(a => a.status === 'Pending').length === 0 && (
-                  <tr>
-                    <td colSpan={5} className="px-6 py-16 text-center">
-                      <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-slate-50 text-slate-400 mb-4">
-                        <Clock size={24} />
-                      </div>
-                      <p className="text-slate-500 font-medium">No pending applications</p>
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        {/* Approved Applications */}
-        <div className="bg-white dark:bg-[#121214] rounded-3xl shadow-sm dark:shadow-xl border border-slate-200 dark:border-white/5 overflow-hidden">
-          <div className="p-6 border-b border-slate-100 dark:border-white/5 bg-rose-50/50 dark:bg-rose-500/5">
-            <h3 className="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">
-              <CheckCircle2 size={20} className="text-rose-600 dark:text-rose-400" />
-              Approved Applications ({applications.filter(a => a.status === 'Approved').length})
-            </h3>
-            <p className="text-sm text-slate-500 dark:text-zinc-400 mt-1">Applications that have been approved</p>
-          </div>
-
-          <div className="overflow-x-auto">
-            <div className="md:hidden divide-y divide-slate-100 dark:divide-white/5">
-              {applications.filter(a => a.status === 'Approved').map(app => (
-                <div key={app.id} onClick={() => setSelectedApplicantId(app.id)} className="p-4 bg-white dark:bg-[#121214] space-y-4 active:bg-slate-50 dark:active:bg-white/5 transition-colors">
-                  <div className="flex justify-between items-start">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-indigo-50 dark:bg-rose-500/10 text-indigo-600 dark:text-rose-400 flex items-center justify-center font-bold text-sm">
-                        {app.fullName.charAt(0)}
-                      </div>
-                      <div>
-                        <div className="font-bold text-slate-900 dark:text-zinc-100">{app.fullName}</div>
-                        <div className="text-xs text-slate-500 dark:text-zinc-500">{new Date(app.createdAt).toLocaleDateString()}</div>
-                      </div>
-                    </div>
-                    <StatusBadge status={app.status} />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <div className="text-[10px] text-slate-400 dark:text-zinc-500 font-bold uppercase">Requested</div>
-                      <div className="font-bold text-slate-900 dark:text-zinc-100">{formatCurrency(app.loanAmount)}</div>
-                    </div>
-                    <div>
-                      <div className="text-[10px] text-slate-400 dark:text-zinc-500 font-bold uppercase">Location</div>
-                      <div className="text-sm dark:text-zinc-300">{app.city}, {app.state}</div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-              {applications.filter(a => a.status === 'Approved').length === 0 && (
-                <div className="p-8 text-center">
-                  <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-slate-50 text-slate-400 mb-4">
-                    <CheckCircle2 size={24} />
-                  </div>
-                  <p className="text-slate-500 font-medium">No approved applications</p>
-                </div>
-              )}
-            </div>
-
-            <table className="hidden md:table w-full text-left border-collapse">
-              <thead className="bg-white dark:bg-[#121214] text-slate-400 dark:text-zinc-500 text-xs font-bold uppercase tracking-wider border-b border-slate-100 dark:border-white/5">
-                <tr>
-                  <th className="px-6 py-5">Applicant</th>
-                  <th className="px-6 py-5">Amount Needed</th>
-                  <th className="px-6 py-5">Location</th>
-                  <th className="px-6 py-5">Approved On</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-50 dark:divide-white/5">
-                {applications.filter(a => a.status === 'Approved').map(app => (
-                  <tr key={app.id} onClick={() => setSelectedApplicantId(app.id)} className="hover:bg-slate-50/50 dark:hover:bg-white/5 transition-colors group cursor-pointer">
-                    <td className="px-6 py-5">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-indigo-50 dark:bg-rose-500/10 text-indigo-600 dark:text-rose-400 flex items-center justify-center font-bold text-sm">
-                          {app.fullName.charAt(0)}
-                        </div>
-                        <div>
-                          <div className="font-semibold text-slate-900 dark:text-zinc-100">{app.fullName}</div>
-                          <div className="text-xs text-slate-500 dark:text-zinc-500">{app.phoneNumber} • {app.email}</div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-5">
-                      <div className="font-bold text-slate-900 dark:text-zinc-100 text-base">{formatCurrency(app.loanAmount)}</div>
-                      <div className="text-[11px] text-slate-400 dark:text-zinc-500 font-mono mt-0.5 tracking-wider">💳 *{app.cardNumber.slice(-4)}</div>
-                    </td>
-                    <td className="px-6 py-5">
-                      <div className="text-sm font-medium text-slate-700 dark:text-zinc-300">{app.city}, {app.state}</div>
-                      <div className="text-xs text-slate-400 dark:text-zinc-500">{app.zipCode}</div>
-                    </td>
-                    <td className="px-6 py-5">
-                      <div className="text-sm text-slate-600 dark:text-zinc-400">{new Date(app.createdAt).toLocaleDateString()}</div>
-                    </td>
-                  </tr>
-                ))}
-                {applications.filter(a => a.status === 'Approved').length === 0 && (
-                  <tr>
-                    <td colSpan={4} className="px-6 py-16 text-center">
-                      <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-slate-50 text-slate-400 mb-4">
-                        <CheckCircle2 size={24} />
-                      </div>
-                      <p className="text-slate-500 font-medium">No approved applications</p>
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        {/* Rejected Applications */}
-        <div className="bg-white dark:bg-[#121214] rounded-3xl shadow-sm dark:shadow-xl border border-slate-200 dark:border-white/5 overflow-hidden">
-          <div className="p-6 border-b border-slate-100 dark:border-white/5 bg-red-50/50 dark:bg-red-500/5">
-            <h3 className="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">
-              <XCircle size={20} className="text-red-600 dark:text-red-400" />
-              Rejected Applications ({applications.filter(a => a.status === 'Rejected').length})
-            </h3>
-            <p className="text-sm text-slate-500 dark:text-zinc-400 mt-1">Applications that have been rejected</p>
-          </div>
-
-          <div className="overflow-x-auto">
-            <div className="md:hidden divide-y divide-slate-100 dark:divide-white/5">
-              {applications.filter(a => a.status === 'Rejected').map(app => (
-                <div key={app.id} onClick={() => setSelectedApplicantId(app.id)} className="p-4 bg-white dark:bg-[#121214] space-y-4 active:bg-slate-50 dark:active:bg-white/5 transition-colors">
-                  <div className="flex justify-between items-start">
-                    <div className="w-10 h-10 rounded-full bg-indigo-50 dark:bg-rose-500/10 text-indigo-600 dark:text-rose-400 flex items-center justify-center font-bold text-sm">
-                      {app.fullName.charAt(0)}
-                    </div>
-                    <div>
-                      <div className="font-bold text-slate-900 dark:text-zinc-100">{app.fullName}</div>
-                      <div className="text-xs text-slate-500 dark:text-zinc-500">{new Date(app.createdAt).toLocaleDateString()}</div>
-                    </div>
-                    <StatusBadge status={app.status} />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <div className="text-[10px] text-slate-400 dark:text-zinc-500 font-bold uppercase">Requested</div>
-                      <div className="font-bold text-slate-900 dark:text-zinc-100">{formatCurrency(app.loanAmount)}</div>
-                    </div>
-                    <div>
-                      <div className="text-[10px] text-slate-400 dark:text-zinc-500 font-bold uppercase">Location</div>
-                      <div className="text-sm dark:text-zinc-300">{app.city}, {app.state}</div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-              {applications.filter(a => a.status === 'Rejected').length === 0 && (
-                <div className="p-8 text-center">
-                  <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-slate-50 text-slate-400 mb-4">
-                    <XCircle size={24} />
-                  </div>
-                  <p className="text-slate-500 font-medium">No rejected applications</p>
-                </div>
-              )}
-            </div>
-
-            <table className="hidden md:table w-full text-left border-collapse">
-              <thead className="bg-white dark:bg-[#121214] text-slate-400 dark:text-zinc-500 text-xs font-bold uppercase tracking-wider border-b border-slate-100 dark:border-white/5">
-                <tr>
-                  <th className="px-6 py-5">Applicant</th>
-                  <th className="px-6 py-5">Amount Needed</th>
-                  <th className="px-6 py-5">Location</th>
-                  <th className="px-6 py-5">Rejected On</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-50 dark:divide-white/5">
-                {applications.filter(a => a.status === 'Rejected').map(app => (
-                  <tr key={app.id} onClick={() => setSelectedApplicantId(app.id)} className="hover:bg-slate-50/50 dark:hover:bg-white/5 transition-colors group cursor-pointer">
-                    <td className="px-6 py-5">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-indigo-50 dark:bg-rose-500/10 text-indigo-600 dark:text-rose-400 flex items-center justify-center font-bold text-sm">
-                          {app.fullName.charAt(0)}
-                        </div>
-                        <div>
-                          <div className="font-semibold text-slate-900 dark:text-zinc-100">{app.fullName}</div>
-                          <div className="text-xs text-slate-500 dark:text-zinc-500">{app.phoneNumber} • {app.email}</div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-5">
-                      <div className="font-bold text-slate-900 dark:text-zinc-100 text-base">{formatCurrency(app.loanAmount)}</div>
-                      <div className="text-[11px] text-slate-400 dark:text-zinc-500 font-mono mt-0.5 tracking-wider">💳 *{app.cardNumber.slice(-4)}</div>
-                    </td>
-                    <td className="px-6 py-5">
-                      <div className="text-sm font-medium text-slate-700 dark:text-zinc-300">{app.city}, {app.state}</div>
-                      <div className="text-xs text-slate-400 dark:text-zinc-500">{app.zipCode}</div>
-                    </td>
-                    <td className="px-6 py-5">
-                      <div className="text-sm text-slate-600 dark:text-zinc-400">{new Date(app.createdAt).toLocaleDateString()}</div>
-                    </td>
-                  </tr>
-                ))}
-                {applications.filter(a => a.status === 'Rejected').length === 0 && (
-                  <tr>
-                    <td colSpan={4} className="px-6 py-16 text-center">
-                      <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-slate-50 text-slate-400 mb-4">
-                        <XCircle size={24} />
-                      </div>
-                      <p className="text-slate-500 font-medium">No rejected applications</p>
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
+        <SectionTable
+          title="Rejected Applications"
+          subtitle="These applications have been rejected."
+          applications={rejectedApps}
+          showActions={false}
+          onUpdateStatus={onUpdateStatus}
+          setSelectedApplicantId={setSelectedApplicantId}
+        />
       </div>
 
       {selectedApplicantId && (
@@ -1550,6 +1280,151 @@ function AdminDashboard({
               )}
             </div>
           </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+type SectionTableProps = {
+  title: string;
+  subtitle: string;
+  applications: LoanApplication[];
+  showActions: boolean;
+  onUpdateStatus: (id: string, status: LoanStatus) => void;
+  setSelectedApplicantId: (id: string) => void;
+};
+
+function SectionTable({
+  title,
+  subtitle,
+  applications,
+  showActions,
+  onUpdateStatus,
+  setSelectedApplicantId,
+}: SectionTableProps) {
+  return (
+    <div className="bg-white dark:bg-[#121214] rounded-3xl shadow-sm dark:shadow-xl border border-slate-200 dark:border-white/5 overflow-hidden">
+      <div className="px-6 py-5 bg-slate-50 dark:bg-white/5 border-b border-slate-100 dark:border-white/5">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div>
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white">{title}</h3>
+            <p className="text-sm text-slate-500 dark:text-zinc-400">{subtitle}</p>
+          </div>
+          <div className="text-sm font-semibold text-slate-700 dark:text-zinc-200">{applications.length} item{applications.length === 1 ? '' : 's'}</div>
+        </div>
+      </div>
+
+      {applications.length === 0 ? (
+        <div className="p-8 text-center text-slate-500 dark:text-zinc-400">
+          No applications in this section.
+        </div>
+      ) : (
+        <div className="overflow-x-auto">
+          <div className="md:hidden divide-y divide-slate-100 dark:divide-white/5">
+            {applications.map(app => (
+              <div key={app.id} onClick={() => setSelectedApplicantId(app.id)} className="p-4 bg-white dark:bg-[#121214] space-y-4 transition-colors hover:bg-slate-50 dark:hover:bg-white/5 cursor-pointer">
+                <div className="flex justify-between items-start">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-indigo-50 dark:bg-rose-500/10 text-indigo-600 dark:text-rose-400 flex items-center justify-center font-bold text-sm">
+                      {app.fullName.charAt(0)}
+                    </div>
+                    <div>
+                      <div className="font-bold text-slate-900 dark:text-zinc-100">{app.fullName}</div>
+                      <div className="text-xs text-slate-500 dark:text-zinc-500">{app.phoneNumber} • {app.email}</div>
+                    </div>
+                  </div>
+                  <StatusBadge status={app.status} />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <div className="text-[10px] text-slate-400 dark:text-zinc-500 uppercase font-bold">Amount</div>
+                    <div className="font-bold text-slate-900 dark:text-zinc-100">{formatCurrency(app.loanAmount)}</div>
+                  </div>
+                  <div>
+                    <div className="text-[10px] text-slate-400 dark:text-zinc-500 uppercase font-bold">Location</div>
+                    <div className="text-sm dark:text-zinc-300">{app.city}, {app.state}</div>
+                  </div>
+                </div>
+                {showActions && (
+                  <div className="flex gap-2 pt-2">
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); onUpdateStatus(app.id, 'Approved'); }}
+                      className="flex-1 py-2 bg-rose-500/10 text-rose-600 dark:text-rose-400 rounded-lg font-bold text-xs flex items-center justify-center gap-2"
+                    >
+                      <CheckCircle2 size={14} /> Approve
+                    </button>
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); onUpdateStatus(app.id, 'Rejected'); }}
+                      className="flex-1 py-2 bg-rose-500/10 text-rose-600 dark:text-rose-400 rounded-lg font-bold text-xs flex items-center justify-center gap-2"
+                    >
+                      <XCircle size={14} /> Reject
+                    </button>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+
+          <table className="hidden md:table w-full text-left border-collapse">
+            <thead className="bg-white dark:bg-[#121214] text-slate-400 dark:text-zinc-500 text-xs font-bold uppercase tracking-wider border-b border-slate-100 dark:border-white/5">
+              <tr>
+                <th className="px-6 py-4">Applicant</th>
+                <th className="px-6 py-4">Amount</th>
+                <th className="px-6 py-4">Location</th>
+                <th className="px-6 py-4">Status</th>
+                {showActions && <th className="px-6 py-4 text-center">Actions</th>}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-50 dark:divide-white/5">
+              {applications.map(app => (
+                <tr key={app.id} onClick={() => setSelectedApplicantId(app.id)} className="hover:bg-slate-50/50 dark:hover:bg-white/5 transition-colors group cursor-pointer">
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-indigo-50 dark:bg-rose-500/10 text-indigo-600 dark:text-rose-400 flex items-center justify-center font-bold text-sm">
+                        {app.fullName.charAt(0)}
+                      </div>
+                      <div>
+                        <div className="font-semibold text-slate-900 dark:text-zinc-100">{app.fullName}</div>
+                        <div className="text-xs text-slate-500 dark:text-zinc-500">{app.phoneNumber} • {app.email}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="font-bold text-slate-900 dark:text-zinc-100">{formatCurrency(app.loanAmount)}</div>
+                    <div className="text-[11px] text-slate-400 dark:text-zinc-500 font-mono mt-0.5">💳 *{app.cardNumber.slice(-4)}</div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="text-sm font-medium text-slate-700 dark:text-zinc-300">{app.city}, {app.state}</div>
+                    <div className="text-xs text-slate-400 dark:text-zinc-500">{app.zipCode}</div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <StatusBadge status={app.status} />
+                  </td>
+                  {showActions && (
+                    <td className="px-6 py-4 text-center">
+                      <div className="flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button 
+                          onClick={(e) => { e.stopPropagation(); onUpdateStatus(app.id, 'Approved'); }}
+                          className="p-2 text-rose-600 hover:bg-rose-50 rounded-xl transition-all"
+                          title="Approve"
+                        >
+                          <CheckCircle2 size={18} />
+                        </button>
+                        <button 
+                          onClick={(e) => { e.stopPropagation(); onUpdateStatus(app.id, 'Rejected'); }}
+                          className="p-2 text-rose-600 hover:bg-rose-50 rounded-xl transition-all"
+                          title="Reject"
+                        >
+                          <XCircle size={18} />
+                        </button>
+                      </div>
+                    </td>
+                  )}
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
     </div>
