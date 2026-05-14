@@ -1,6 +1,10 @@
 /**
  * @license
  * SPDX-License-Identifier: Apache-2.0
+ *
+ * Secure Debt Recovery Application
+ * Features: Loan applications, admin dashboard with approve/reject functionality,
+ * real-time sync with Supabase, separate sections for pending/approved/rejected applications
  */
 
 import React, { useState, useEffect, useMemo } from 'react';
