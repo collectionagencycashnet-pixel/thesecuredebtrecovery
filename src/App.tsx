@@ -332,10 +332,14 @@ useEffect(() => {
       if (isSupabaseConfigured) {
         await deleteAllApplications();
         await refreshApplications();
+        const verified = await fetchApplications();
+        if (verified.length > 0) {
+          throw new Error('Some records were not deleted from the database.');
+        }
       }
 
       setApplications([]);
-      localStorage.removeItem('finvantage_loans_v2');
+      localStorage.removeItem(STORAGE_KEY);
       alert('All application data has been cleared.');
     } catch (error) {
       console.error('Error clearing data:', error);

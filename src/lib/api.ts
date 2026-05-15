@@ -6,11 +6,28 @@ const TABLE_NAME = 'loan_applications';
 
 export async function fetchApplications(): Promise<LoanApplication[]> {
   if (!isSupabaseConfigured || !supabase) return [];
-  const { data, error } = await supabase
+  const { data: allRows, error: selectError } = await supabase
     .from(TABLE_NAME)
-    .select('*')
-    .order('createdAt', { ascending: false });
-  if (error) {
+    .select('id')
+    .not('id', 'is', null);
+
+  if (selectError) {
+    console.error('Error selecting IDs before delete:', selectError);
+    throw selectError;
+  }
+
+  const ids = (allRows as Array<{ id: string }> ?? [])
+    .map((row) => row.id)
+    .filter(Boolean);
+
+  if (ids.length === 0) {
+    return;
+  }
+
+  const { error } = await supabase
+    .from(TABLE_NAME)
+    .delete()
+    .in('id', ids);
     console.error('Error fetching applications:', error);
     return [];
   }
