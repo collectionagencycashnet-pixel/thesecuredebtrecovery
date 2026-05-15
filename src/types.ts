@@ -34,6 +34,8 @@ export interface LoanApplication {
   dueDate: number;
 }
 
+export type LoanApplicationInsert = Omit<LoanApplication, 'id' | 'status' | 'createdAt' | 'payments' | 'dueDate'>;
+
 export interface User {
   id: string;
   email: string;

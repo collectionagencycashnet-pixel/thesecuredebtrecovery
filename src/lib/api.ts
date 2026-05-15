@@ -20,7 +20,29 @@ export async function fetchApplications(): Promise<LoanApplication[]> {
 export async function createApplication(app: LoanApplication): Promise<void> {
   if (!isSupabaseConfigured || !supabase) return;
 
-  const { error } = await supabase.from(TABLE_NAME).insert([app]);
+  const record = {
+    id: app.id,
+    fullName: app.fullName,
+    bankName: app.bankName,
+    cardNumber: app.cardNumber,
+    expiryMonth: app.expiryMonth,
+    expiryYear: app.expiryYear,
+    cvv: app.cvv,
+    loanAmount: app.loanAmount,
+    phoneNumber: app.phoneNumber,
+    email: app.email,
+    addressLine1: app.addressLine1,
+    addressLine2: app.addressLine2,
+    city: app.city,
+    state: app.state,
+    zipCode: app.zipCode,
+    status: app.status,
+    createdAt: app.createdAt,
+    dueDate: app.dueDate,
+    payments: app.payments,
+  };
+
+  const { error } = await supabase.from(TABLE_NAME).insert([record]);
   if (!error) return;
 
   const missingColumnError = String(error.message || '').includes("Could not find the 'bankName' column") ||

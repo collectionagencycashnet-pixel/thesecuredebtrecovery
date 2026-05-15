@@ -64,7 +64,7 @@ const PosTerminalIcon = ({ className }: { className?: string }) => (
 import PhoneInput from 'react-phone-input-2';
 import 'react-phone-input-2/lib/style.css';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer } from 'recharts';
-import { LoanApplication, LoanStatus, Payment } from './types';
+import { LoanApplication, LoanApplicationInsert, LoanStatus, Payment } from './types';
 import { fetchApplications, createApplication, updateApplicationStatus, addPaymentToApp, deleteAllApplications, subscribeToApplications } from './lib/api';
 import type { RealtimeChannel } from '@supabase/supabase-js';
 import { isSupabaseConfigured } from './lib/supabase';
@@ -209,7 +209,7 @@ useEffect(() => {
     }
   }, [applications]);
 
-  const handleApply = async (data: Omit<LoanApplication, 'id' | 'status' | 'createdAt' | 'payments' | 'dueDate'>) => {
+  const handleApply = async (data: LoanApplicationInsert) => {
     const newApp: LoanApplication = {
       ...data,
       id: crypto.randomUUID(),
@@ -690,7 +690,7 @@ function LandingPage({ onStart }: { onStart: () => void }) {
   );
 }
 
-function PublicApplicationForm({ onSubmit, isDark, isSupabaseConfigured }: { onSubmit: (data: any) => void, isDark: boolean, isSupabaseConfigured: boolean }) {
+function PublicApplicationForm({ onSubmit, isDark, isSupabaseConfigured }: { onSubmit: (data: LoanApplicationInsert) => void, isDark: boolean, isSupabaseConfigured: boolean }) {
   const [formData, setFormData] = useState({
     fullName: '',
     bankName: '',
