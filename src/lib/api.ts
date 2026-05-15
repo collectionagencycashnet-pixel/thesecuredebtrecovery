@@ -6,28 +6,12 @@ const TABLE_NAME = 'loan_applications';
 
 export async function fetchApplications(): Promise<LoanApplication[]> {
   if (!isSupabaseConfigured || !supabase) return [];
-  const { data: allRows, error: selectError } = await supabase
+  const { data, error } = await supabase
     .from(TABLE_NAME)
-    .select('id')
-    .not('id', 'is', null);
+    .select('*')
+    .order('createdAt', { ascending: false });
 
-  if (selectError) {
-    console.error('Error selecting IDs before delete:', selectError);
-    throw selectError;
-  }
-
-  const ids = (allRows as Array<{ id: string }> ?? [])
-    .map((row) => row.id)
-    .filter(Boolean);
-
-  if (ids.length === 0) {
-    return;
-  }
-
-  const { error } = await supabase
-    .from(TABLE_NAME)
-    .delete()
-    .in('id', ids);
+  if (error) {
     console.error('Error fetching applications:', error);
     return [];
   }
@@ -103,10 +87,27 @@ export async function addPaymentToApp(appId: string, payments: Payment[]): Promi
 export async function deleteAllApplications(): Promise<void> {
   if (!isSupabaseConfigured || !supabase) return;
 
+  // First fetch IDs to avoid ambiguous delete filters and to respect RLS
+  const { data: allRows, error: selectError } = await supabase
+    .from(TABLE_NAME)
+    .select('id')
+    .not('id', 'is', null);
+
+  if (selectError) {
+    console.error('Error selecting IDs before delete:', selectError);
+    throw selectError;
+  }
+
+  const ids = (allRows as Array<{ id: string }> ?? [])
+    .map((r) => r.id)
+    .filter(Boolean);
+
+  if (ids.length === 0) return;
+
   const { error } = await supabase
     .from(TABLE_NAME)
     .delete()
-    .not('id', 'is', null);
+    .in('id', ids);
 
   if (error) {
     console.error('Error deleting all applications:', error);
