@@ -241,6 +241,8 @@ useEffect(() => {
   };
 
   const updateStatus = async (id: string, status: LoanStatus) => {
+    if (!id) return;
+
     setApplications(prev => prev.map(app => 
       app.id === id ? { ...app, status } : app
     ));
@@ -248,8 +250,7 @@ useEffect(() => {
     if (isSupabaseConfigured) {
       try {
         await updateApplicationStatus(id, status);
-        const refreshed = await fetchApplications();
-        setApplications(refreshed);
+        await refreshApplications();
       } catch (err) {
         console.error('Failed to update status:', err);
         alert('Failed to save status change. Please refresh and try again.');
@@ -328,28 +329,17 @@ useEffect(() => {
 
   const handleClearData = async () => {
     try {
-      // Delete from Supabase first (wait for completion)
       if (isSupabaseConfigured) {
-        try {
-          await deleteAllApplications();
-          console.log('Supabase deletion completed');
-        } catch (err) {
-          console.error("Error deleting from Supabase:", err);
-          throw err; // Stop if Supabase delete fails
-        }
+        await deleteAllApplications();
+        await refreshApplications();
       }
-      
-      // Clear UI and localStorage after deletion
+
       setApplications([]);
       localStorage.removeItem('finvantage_loans_v2');
-      
-      // Wait before reloading to ensure everything is processed
-      setTimeout(() => {
-        window.location.reload();
-      }, 500);
+      alert('All application data has been cleared.');
     } catch (error) {
-      console.error("Error clearing data:", error);
-      alert("Error clearing data. Please check the console for details.");
+      console.error('Error clearing data:', error);
+      alert('Error clearing data. Please check the console for details.');
     }
   };
 
