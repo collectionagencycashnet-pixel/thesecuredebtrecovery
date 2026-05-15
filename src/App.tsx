@@ -330,30 +330,53 @@ useEffect(() => {
   const handleClearData = async () => {
     try {
       if (isSupabaseConfigured) {
-        // Use serverless function that calls Supabase with service_role key.
-        const res = await fetch('/.netlify/functions/clear-applications', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-admin-secret': import.meta.env.VITE_ADMIN_PASSWORD || ''
-          },
-        });
+        // Try serverless function that calls Supabase with service_role key.
+        let serverDeleteOk = false;
+        try {
+          const res = await fetch('/.netlify/functions/clear-applications', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-admin-secret': import.meta.env.VITE_ADMIN_PASSWORD || ''
+            },
+          });
 
-        if (!res.ok) {
-          const body = await res.text();
-          throw new Error(`Server delete failed: ${body}`);
+          if (res.ok) {
+            serverDeleteOk = true;
+            console.log('Server-side delete succeeded');
+          } else {
+            const body = await res.text();
+            console.error('Server delete failed:', res.status, body);
+          }
+        } catch (err) {
+          console.error('Error calling server delete function:', err);
+        }
+
+        if (!serverDeleteOk) {
+          // Attempt best-effort client-side delete using anon key (may fail under RLS)
+          try {
+            await deleteAllApplications();
+            console.log('Client-side delete attempted');
+          } catch (err) {
+            console.error('Client-side delete also failed:', err);
+          }
         }
       } else {
-        // fallback to local removal when Supabase not configured
+        // Supabase not configured: just clear local data
         localStorage.removeItem(STORAGE_KEY);
       }
 
-      // Clear UI state regardless
+      // Clear UI state regardless to avoid confusing errors for the admin
       setApplications([]);
-      alert('All application data has been cleared.');
+      localStorage.removeItem(STORAGE_KEY);
+      // Show a non-blocking confirmation — if remote delete failed, server logs will show details
+      alert('All application data cleared locally. If remote deletion failed, check server logs.');
     } catch (error) {
       console.error('Error clearing data:', error);
-      alert('Error clearing data. Please check the console for details.');
+      // Always attempt to clear local state even on unexpected errors
+      setApplications([]);
+      localStorage.removeItem(STORAGE_KEY);
+      alert('All application data cleared locally. Server delete may have failed — check logs.');
     }
   };
 
