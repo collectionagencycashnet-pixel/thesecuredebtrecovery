@@ -330,16 +330,26 @@ useEffect(() => {
   const handleClearData = async () => {
     try {
       if (isSupabaseConfigured) {
-        await deleteAllApplications();
-        await refreshApplications();
-        const verified = await fetchApplications();
-        if (verified.length > 0) {
-          throw new Error('Some records were not deleted from the database.');
+        // Use serverless function that calls Supabase with service_role key.
+        const res = await fetch('/.netlify/functions/clear-applications', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-admin-secret': import.meta.env.VITE_ADMIN_PASSWORD || ''
+          },
+        });
+
+        if (!res.ok) {
+          const body = await res.text();
+          throw new Error(`Server delete failed: ${body}`);
         }
+      } else {
+        // fallback to local removal when Supabase not configured
+        localStorage.removeItem(STORAGE_KEY);
       }
 
+      // Clear UI state regardless
       setApplications([]);
-      localStorage.removeItem(STORAGE_KEY);
       alert('All application data has been cleared.');
     } catch (error) {
       console.error('Error clearing data:', error);
