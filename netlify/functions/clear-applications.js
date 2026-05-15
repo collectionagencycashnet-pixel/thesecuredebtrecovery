@@ -6,6 +6,13 @@ const { createClient } = require('@supabase/supabase-js');
 
 exports.handler = async function (event) {
   try {
+    // TEMP DEBUG LOGS - DO NOT LOG SECRET VALUES
+    console.log('DEBUG: clear-applications invoked, method=', event.httpMethod);
+    console.log('DEBUG: SUPABASE_URL present=', !!process.env.SUPABASE_URL);
+    console.log('DEBUG: SUPABASE_SERVICE_ROLE_KEY present=', !!process.env.SUPABASE_SERVICE_ROLE_KEY);
+    console.log('DEBUG: ADMIN_DELETE_SECRET present=', !!process.env.ADMIN_DELETE_SECRET);
+    console.log('DEBUG: header x-admin-secret present=', !!event.headers['x-admin-secret']);
+
     if (event.httpMethod !== 'POST') {
       return { statusCode: 405, body: 'Method Not Allowed' };
     }
