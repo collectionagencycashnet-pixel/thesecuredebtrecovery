@@ -1,11 +1,11 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700;800;900&family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500&display=swap');
 @import "tailwindcss";
 @custom-variant dark (&:is(.dark *));
 
 @theme {
-  --font-sans: "Inter", "Calibri", ui-sans-serif, system-ui, sans-serif;
-  --font-serif: "Times New Roman", Times, ui-serif, Georgia, serif;
-  --font-mono: "Calibri", ui-monospace, SFMono-Regular, monospace;
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-serif: "Playfair Display", "Times New Roman", Times, Georgia, serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
 /* Global Scrollbar */
@@ -19,24 +19,24 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(100, 116, 139, 0.3);
+  background: rgba(207, 170, 98, 0.3);
   border-radius: 10px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(100, 116, 139, 0.5);
+  background: rgba(207, 170, 98, 0.5);
 }
 
 html.dark ::-webkit-scrollbar-track {
-  background: #09090b;
+  background: #010B1B;
 }
 
 html.dark ::-webkit-scrollbar-thumb {
-  background: rgba(244, 63, 94, 0.4);
+  background: rgba(207, 170, 98, 0.4);
 }
 
 html.dark ::-webkit-scrollbar-thumb:hover {
-  background: rgba(244, 63, 94, 0.6);
+  background: rgba(207, 170, 98, 0.6);
 }
 
 /* Custom Scrollbar */
@@ -47,7 +47,7 @@ html.dark ::-webkit-scrollbar-thumb:hover {
   background: transparent;
 }
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(100, 116, 139, 0.2);
+  background: rgba(207, 170, 98, 0.3);
   border-radius: 10px;
 }
 
@@ -69,7 +69,7 @@ input, select, textarea {
 
 /* Responsive Phone Input */
 .phone-container-custom {
-  @apply w-full rounded-lg bg-white dark:bg-black/40 border border-slate-200 dark:border-white/10 focus-within:bg-slate-50 dark:focus-within:bg-[#09090b] shadow-sm transition-all focus-within:ring-1 focus-within:ring-orange-500/50 dark:focus-within:ring-orange-500/30 focus-within:border-orange-500/50;
+  @apply w-full rounded-lg bg-white dark:bg-[#010B1B]/80 border border-slate-200 dark:border-[#CFAA62]/20 focus-within:bg-slate-50 dark:focus-within:bg-[#010B1B] shadow-sm transition-all focus-within:ring-1 focus-within:ring-[#CFAA62] focus-within:border-[#CFAA62];
 }
 
 .phone-container-custom .form-control {
@@ -85,7 +85,7 @@ input, select, textarea {
 }
 
 html.dark .phone-container-custom .selected-flag {
-  border-right: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-right: 1px solid rgba(207, 170, 98, 0.2) !important;
 }
 
 .phone-container-custom .selected-flag:hover,
@@ -102,18 +102,18 @@ html.dark .phone-container-custom .selected-flag {
 }
 
 .dark .payment-phone-input .react-tel-input .form-control {
-  background-color: #09090b !important;
+  background-color: #010B1B !important;
   color: #f4f4f5 !important;
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border: 1px solid rgba(207, 170, 98, 0.2) !important;
 }
 
 .dark .payment-phone-input .react-tel-input .selected-flag {
-  background-color: #09090b !important;
-  border-right: 1px solid rgba(255, 255, 255, 0.1) !important;
+  background-color: #010B1B !important;
+  border-right: 1px solid rgba(207, 170, 98, 0.2) !important;
 }
 
 .dark .payment-phone-input .react-tel-input .country-list {
-  background-color: #121214 !important;
+  background-color: #07101E !important;
   color: #f4f4f5 !important;
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border: 1px solid rgba(207, 170, 98, 0.2) !important;
 }

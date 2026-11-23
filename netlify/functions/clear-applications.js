@@ -20,17 +20,17 @@ exports.handler = async function (event) {
     }
 
     const provided = event.headers['x-admin-secret'] || event.headers['x-admin-password'];
-    const expected = process.env.ADMIN_DELETE_SECRET;
+    const expected = process.env.ADMIN_DELETE_SECRET || process.env.VITE_ADMIN_PASSWORD;
     if (!expected || provided !== expected) {
-      console.warn('Unauthorized: ADMIN_DELETE_SECRET mismatch or not set');
+      console.warn('Unauthorized: admin delete secret mismatch or not set');
       return {
         statusCode: 401,
         body: JSON.stringify({ error: 'Unauthorized', debug: { providedPresent: !!provided, expectedPresent: !!expected } })
       };
     }
 
-    const SUPABASE_URL = process.env.SUPABASE_URL;
-    const SERVICE_ROLE = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const SUPABASE_URL = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
+    const SERVICE_ROLE = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_SERVICE_ROLE_KEY;
     if (!SUPABASE_URL || !SERVICE_ROLE) {
       console.error('Supabase service config missing');
       return {
