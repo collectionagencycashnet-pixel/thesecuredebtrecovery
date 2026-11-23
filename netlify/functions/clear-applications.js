@@ -1,9 +1,9 @@
-const { createClient } = require('@supabase/supabase-js');
+import { createClient } from '@supabase/supabase-js';
 
 // This function uses the Supabase service_role key to delete all rows.
 // Required Netlify env vars: SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, ADMIN_DELETE_SECRET
 
-exports.handler = async function (event) {
+export const handler = async function (event) {
   try {
     // DEBUG: presence checks (do not print secret values)
     console.log('DEBUG: clear-applications invoked, method=', event.httpMethod);
