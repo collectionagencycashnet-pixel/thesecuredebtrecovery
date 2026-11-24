@@ -10,8 +10,8 @@
 
 /* Global Scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 7px;
+  height: 7px;
 }
 
 ::-webkit-scrollbar-track {
@@ -51,19 +51,39 @@ html.dark ::-webkit-scrollbar-thumb:hover {
   border-radius: 10px;
 }
 
-/* Base Mobile Optimizations */
+/* Base Device & Responsive Typography Optimizations */
 html {
   -webkit-tap-highlight-color: transparent;
   scroll-behavior: smooth;
+  font-size: 14.5px; /* Slightly smaller, more refined and compact font size across devices */
+}
+
+@media (min-width: 640px) {
+  html {
+    font-size: 15px;
+  }
+}
+
+@media (min-width: 1024px) {
+  html {
+    font-size: 15.5px;
+  }
+}
+
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+  text-rendering: optimizeLegibility;
 }
 
 input, select, textarea {
-  font-size: 16px !important; /* Prevents iOS zoom on focus */
+  font-size: 16px !important; /* Prevents iOS auto-zoom on focus on mobile devices */
 }
 
 @media (min-width: 640px) {
   input, select, textarea {
-    font-size: inherit !important;
+    font-size: 0.875rem !important; /* 14px on desktop/tablets for a clean executive layout */
   }
 }
 
