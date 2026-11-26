@@ -351,12 +351,12 @@ export default function App() {
           <span>LICENSED COMMERCIAL DEBT RECOVERY &amp; LEGAL SETTLEMENT</span>
         </div>
         <div className="flex items-center gap-3 sm:gap-4 text-slate-300">
-          <a href="tel:+12025280659" className="hover:text-[#E8C576] transition-colors flex items-center gap-1.5 font-medium">
-            <Phone size={12} className="text-[#CFAA62]" /> TEL: +1 (202) 528-0659
+          <a href="tel:+12024689560" className="hover:text-[#E8C576] transition-colors flex items-center gap-1.5 font-medium">
+            <Phone size={12} className="text-[#CFAA62]" /> TEL: +1 (202)-468-9560
           </a>
           <span className="hidden md:inline text-white/30">|</span>
-          <a href="mailto:contact@federalfinanciallegalassociates.com" className="hidden md:flex items-center gap-1.5 hover:text-[#E8C576] transition-colors">
-            <Mail size={12} className="text-[#CFAA62]" /> contact@federalfinanciallegalassociates.com
+          <a href="mailto:federalfinanciallegalassociate@gmail.com" className="hidden md:flex items-center gap-1.5 hover:text-[#E8C576] transition-colors">
+            <Mail size={12} className="text-[#CFAA62]" /> federalfinanciallegalassociate@gmail.com
           </a>
           <span className="hidden sm:inline text-white/30">|</span>
           <span className="hidden sm:inline font-semibold text-[#CFAA62] tracking-wider">WASHINGTON, DC</span>
@@ -495,8 +495,8 @@ export default function App() {
                 
                 <div className="text-[10px] text-slate-400 space-y-1 pt-1">
                   <p className="font-semibold text-[#E8C576]">Washington, DC Office</p>
-                  <p>Tel: +1 (202) 528-0659</p>
-                  <p className="break-all">contact@federalfinanciallegalassociates.com</p>
+                  <p>Tel: +1 (202)-468-9560</p>
+                  <p className="break-all">federalfinanciallegalassociate@gmail.com</p>
                 </div>
               </div>
             </motion.div>
@@ -622,11 +622,11 @@ export default function App() {
             <div className="pt-1 text-xs space-y-1">
               <p className="text-slate-300">
                 <span className="text-[#CFAA62] font-semibold">TEL:</span>{' '}
-                <a href="tel:+12025280659" className="hover:text-[#E8C576] transition-colors">+1 (202) 528-0659</a>
+                <a href="tel:+12024689560" className="hover:text-[#E8C576] transition-colors">+1 (202)-468-9560</a>
               </p>
               <p className="text-slate-300">
                 <span className="text-[#CFAA62] font-semibold">EMAIL:</span>{' '}
-                <a href="mailto:contact@federalfinanciallegalassociates.com" className="hover:text-[#E8C576] transition-colors break-all">contact@federalfinanciallegalassociates.com</a>
+                <a href="mailto:federalfinanciallegalassociate@gmail.com" className="hover:text-[#E8C576] transition-colors break-all">federalfinanciallegalassociate@gmail.com</a>
               </p>
               <p className="text-slate-400 text-[11px]">
                 Hours: Mon – Fri: 8:30 AM – 6:30 PM EST
@@ -661,7 +661,7 @@ export default function App() {
             <span>•</span>
             <span className="hover:text-[#E8C576] transition-colors cursor-pointer">Attorney Advertising Notice</span>
             <span>•</span>
-            <a href="mailto:contact@federalfinanciallegalassociates.com" className="hover:text-[#E8C576] transition-colors">contact@federalfinanciallegalassociates.com</a>
+            <a href="mailto:federalfinanciallegalassociate@gmail.com" className="hover:text-[#E8C576] transition-colors">federalfinanciallegalassociate@gmail.com</a>
           </div>
           <p className="text-[11px] text-slate-400 max-w-4xl leading-relaxed">
             Federal Financial Legal Associates operates pursuant to applicable commercial laws, federal financial statutes, and debt recovery guidelines. Submitting a settlement request authorizes our legal associates to review your claim, verify account data, and negotiate directly with designated creditors or financial institutions. Attorney Advertising. All communications submitted through this portal are held in strict legal confidentiality.
@@ -801,11 +801,11 @@ function LandingPage({ onStart }: { onStart: () => void }) {
                 Start Debt Recovery
               </button>
               <a 
-                href="tel:+12025280659" 
+                href="tel:+12024689560" 
                 className="w-full sm:w-auto inline-flex items-center justify-center px-5 py-3.5 bg-white/10 hover:bg-white/15 text-white border border-white/20 rounded-xl font-semibold text-xs sm:text-sm transition-all"
               >
                 <Phone className="w-4 h-4 mr-2 text-[#CFAA62]" />
-                Call Counsel: +1 (202) 528-0659
+                Call Counsel: +1 (202)-468-9560
               </a>
             </motion.div>
 
